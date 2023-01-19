@@ -4,14 +4,26 @@ import { Link } from "react-router-dom";
 import validator from "validator";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   // err
-  const [errors, setErrors] = useState({ email: String });
+  const [errors, setErrors] = useState({
+    email: ["", false],
+    pass: ["", false],
+    form: "",
+  });
 
-  const handleSubmit = async (e) => {
+  console.log(errors.email);
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
+
+    if (errors.email[1] === false || errors.pass[1] === false) {
+      setErrors({ ...errors, form: "Bitte prüfe die Felder" });
+      return;
+    }
+    setErrors({ ...errors, form: "" });
 
     try {
       const res = await axios.post("http://localhost:8080/api/v1/users/login", {
@@ -24,34 +36,26 @@ export default function LoginPage() {
     }
   };
 
-  const validateEmail = (e) => {
-    const value = e.target.value;
+  const handleChangeEmail = (e: any) => {
+    const email = validator.trim(e.target.value);
+    setEmail(email);
 
-    if (validator.isEmail(value)) {
-      // setErrors((prevState) => delete prevState[el.name]);
+    if (!validator.isEmail(email)) {
+      setErrors({ ...errors, email: ["ist keine Email", false] });
     } else {
-      setErrors({ email: "Muss eine E-Mail sein." });
+      setErrors({ ...errors, email: ["", true] });
     }
   };
 
-  const handleChangeEmail = (e) => {
-    setEmail(e.target.value);
+  const handleChangePass = (e: any) => {
+    const pass = e.target.value;
+    setPassword(pass);
 
-    switch (e.target.name) {
-      case "email":
-        validateEmail(e);
-        break;
-
-      case "password":
-        break;
-
-      default:
-        break;
+    if (!validator.isStrongPassword(pass)) {
+      setErrors({ ...errors, pass: ["ist kein Passwort", false] });
+    } else {
+      setErrors({ ...errors, pass: ["Alles OK", true] });
     }
-  };
-
-  const handleChangePass = (e) => {
-    setPassword(e.target.value);
   };
 
   return (
@@ -61,7 +65,7 @@ export default function LoginPage() {
         <form className="flex flex-col gap-1" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email" className="text-slate-600 text-sm">
-              Benutzername/ E-Mail-Adresse
+              E-Mail-Adresse
             </label>
             <input
               type="text"
@@ -72,7 +76,7 @@ export default function LoginPage() {
               onChange={handleChangeEmail}
             />
           </div>
-          <div>{errors.email}</div>
+          <div className={``}>{errors.email[0]}</div>
           <div>
             <label htmlFor="password" className="text-slate-600 text-sm">
               Password
@@ -85,10 +89,13 @@ export default function LoginPage() {
               className="w-full px-4 py-3 border border-slate-300 rounded-lg"
               onChange={handleChangePass}
             />
+            <div>{errors.pass[0]}</div>
           </div>
+
           <button className="mt-3 w-full p-2 bg-indigo-600 hover:bg-indigo-500 transition-all transi rounded-lg hover:rounded-full text-slate-50">
             Login
           </button>
+          <div>{errors.form}</div>
         </form>
         <div className="flex gap-2">
           <Link
