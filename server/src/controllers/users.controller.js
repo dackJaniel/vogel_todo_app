@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 export const createUser = withErrorHandler(async (req, res, next) => {
   const { userName, email, password } = req.body;
 
-  console;
+  // console;
 
   const existingUser = await UserModel.findOne({ email });
   if (existingUser) {
@@ -30,6 +30,8 @@ export const createUser = withErrorHandler(async (req, res, next) => {
 
 export const loginUser = withErrorHandler(async (req, res, next) => {
   const { email, password } = req.body;
+
+  console.log(email, password);
 
   const existingUser = await UserModel.findOne({ email });
 

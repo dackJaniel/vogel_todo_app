@@ -6,13 +6,15 @@ export const createTodo = withErrorHandler(async (req, res, next) => {
   const todo = await TodoModel.create({
     title: req.body.title,
     content: req.body.content,
-    user: res.locals.userId
+    user: res.locals.userId,
   });
   res.status(201).json(todo);
 });
 
 export const getAllTodos = withErrorHandler(async (req, res, next) => {
+  // console.log(req);
   const allTodos = await TodoModel.find({});
+  // console.log(allTodos);
   res.json(allTodos);
 });
 
@@ -33,8 +35,8 @@ export const updateTodoById = withErrorHandler(async (req, res, next) => {
 
   const existingTodo = await TodoModel.findById(id);
 
-  if(res.locals.userId != existingTodo.user){
-    throw new HttpError({status: 401, message: "verarsch mich nicht"})
+  if (res.locals.userId != existingTodo.user) {
+    throw new HttpError({ status: 401, message: "verarsch mich nicht" });
   }
 
   //const updatedTodo = await TodoModel.findByIdAndUpdate(
@@ -49,14 +51,13 @@ export const updateTodoById = withErrorHandler(async (req, res, next) => {
 });
 
 export const deleteTodoById = withErrorHandler(async (req, res, next) => {
-    const id = req.params.id;
-  
-    const updatedTodo = await TodoModel.findByIdAndDelete(id)
+  const id = req.params.id;
 
-    if(!updatedTodo){
-        throw new HttpError({message: "blogpost id doesn't exist", status: 404})
-    }
+  const updatedTodo = await TodoModel.findByIdAndDelete(id);
 
-    res.json(updatedTodo);
-  });
-  
+  if (!updatedTodo) {
+    throw new HttpError({ message: "blogpost id doesn't exist", status: 404 });
+  }
+
+  res.json(updatedTodo);
+});
