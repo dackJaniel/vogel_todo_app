@@ -1,228 +1,147 @@
 import axios from "axios";
-import React, { useState, useId } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-// import { v4 as uid } from 'uuid';
 import validator from "validator";
 
-const RegisterPage = (props) => {
-  const uid = useId();
-
-  // const {} = props;
-  const [error, setError] = useState(false);
-  const [errors, setErrors] = useState({ username: false });
-
+export default function RegisterPage() {
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [passwordAgain, setPasswordAgain] = useState("");
 
-  // Eventhandler ====
-  const handleSubmit = async (e) => {
+  // err
+  const [errors, setErrors] = useState({
+    email: ["", false],
+    pass: ["", false],
+    passAgain: ["", false],
+    form: "",
+  });
+
+  console.log(errors.email);
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    setError(false);
 
-    const formData = getFormData(e.target);
-
-    console.log(formData);
-
-    // try {
-    //   const res = await axios.post('/auth/register', {
-    //     username,
-    //     email,
-    //     password,
-    //     passwordConfirm,
-    //   });
-    //   res.data && window.location.replace('/login');
-    // } catch (error) {
-    //   setError(true);
-    //   console.error(error);
-    // }
-  };
-
-  // const handleChange = (e) => {
-  //   if (e.target.type === 'email') setEmail(e.target.value);
-  // }
-
-  const handleChangeUsername = (e) => {
-    setUsername(e.target.value);
-  };
-
-  const handleChangeEmail = (e) => {
-    setEmail(e.target.value);
-  };
-
-  const handleChangePassword = (e) => {
-    setPassword(e.target.value);
-  };
-  const handleChangePasswordConfirm = (e) => {
-    setPasswordConfirm(e.target.value);
-  };
-
-  const handleBlur = (e) => {
-    const el = e.currentTarget;
-    console.log(el.name);
-    switch (el.name) {
-      case "username":
-        validateTextField(el);
-        break;
-
-      case "firstName":
-        validateTextField(el, { min: 2, max: 100 });
-        break;
-      case "email":
-        validateEmailField(el);
-        break;
+    if (errors.email[1] === false || errors.pass[1] === false) {
+      setErrors({ ...errors, form: "Bitte prüfe die Felder" });
+      return;
     }
-  };
+    setErrors({ ...errors, form: "" });
 
-  // Function =========
-  const validateEmailField = (el) => {
-    const value = el.value;
-    if (!validator.isEmail(value)) {
-      setErrors({ [el.name]: `Your Email is not valid` });
-    } else {
-      setErrors((prevState) => delete prevState[el.name]);
-    }
-  };
-
-  const validateTextField = (el, opts = { min: 2, max: 40 }) => {
-    const value = el.value;
-    const { min, max } = opts;
-    if (validator.isEmpty(value) || !validator.isLength(value, opts)) {
-      //el.classList.add('is-valid')
-      setErrors({
-        [el.name]: `Field is to short or to long (${min} | ${max})`,
+    try {
+      const res = await axios.post("http://localhost:8080/api/v1/users/login", {
+        email,
+        password,
       });
-    } else {
-      setErrors((prevState) => delete prevState[el.name]);
+      console.log(res.data);
+      res.data && window.location.replace("/");
+    } catch (error) {
+      console.log(error);
     }
   };
 
-  const getFormData = (form, requiredFields = []) => {
-    const formData = new FormData(form);
+  const handleChangeEmail = (e: any) => {
+    const email = validator.trim(e.target.value);
+    setEmail(email);
 
-    // z.B. new FormData(form).entries()
+    if (!validator.isEmail(email)) {
+      setErrors({ ...errors, email: ["ist keine Email", false] });
+    } else {
+      setErrors({ ...errors, email: ["", true] });
+    }
+  };
 
-    // [
-    //  {},
-    //    ['firstname', 'Max'],
-    //    ['lastname', 'Mustermann']
-    //  ...
-    // ]
+  const handleChangePass = (e: any) => {
+    const pass = e.target.value;
 
-    //  {'firstname': 'Max', 'lastname:'Mustermann'}
+    if (!validator.isStrongPassword(pass)) {
+      setErrors({ ...errors, pass: ["ist kein Passwort", false] });
+    } else {
+      setPassword(pass);
+      setErrors({ ...errors, pass: ["Alles OK", true] });
+    }
+  };
 
-    const formObj = Array.from(formData.entries()).reduce((obj, arr) => {
-      if (requiredFields.length > 0) {
-        if (!obj[arr[0]] && requiredFields.includes(arr[0])) {
-          obj[arr[0]] = arr[1];
-        }
-      } else {
-        if (!obj[arr[0]]) {
-          obj[arr[0]] = arr[1];
-        }
-      }
-      return obj;
-    }, {});
+  const handleChangePassAgain = (e: any) => {
+    const passAgain = e.target.value;
 
-    return formObj;
+    // https://www.npmjs.com/package/validator
+    if (!validator.equals(passAgain, password)) {
+      setErrors({ ...errors, passAgain: ["Passwort nicht gleich", false] });
+    } else {
+      setPasswordAgain(passAgain);
+      setErrors({ ...errors, passAgain: ["Alles OK", false] });
+    }
   };
 
   return (
-    <div className="container">
-      {JSON.stringify(errors)}
-      <h1>Register</h1>
+    <>
+      <div className="w-1/3 max-w-lg min-w-[290px] my-28 mx-auto">
+        <h1 className=" text-4xl text-slate-700 mb-3">Login</h1>
+        <form className="flex flex-col gap-1" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="email" className="text-slate-600 text-sm">
+              E-Mail-Adresse
+            </label>
+            <input
+              type="text"
+              name="email"
+              id="email"
+              placeholder="Benutzername/ E-Mail eingeben"
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+              onChange={handleChangeEmail}
+            />
+          </div>
+          <div className={``}>{errors.email[0]}</div>
+          <div>
+            <label htmlFor="password" className="text-slate-600 text-sm">
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              placeholder="Passwort eingeben"
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+              onChange={handleChangePass}
+            />
+            <div>{errors.pass[0]}</div>
+          </div>
 
-      <form className="form-register" onSubmit={handleSubmit}>
-        <div className="row">
-          <div className="col-12">
-            <div className="mb-3">
-              <label htmlFor="" className="form-label">
-                Username
-              </label>
-              <input
-                type="text"
-                name="username"
-                className={`form-control input-username ${
-                  errors?.username ? "is-invalid" : "is-valid"
-                }`}
-                placeholder="Enter your username"
-                onChange={handleChangeUsername}
-                onBlur={handleBlur}
-              />
-              <div className="valid-feedback">Alles ok</div>
-              <div className="invalid-feedback">{errors?.username}</div>
-            </div>
+          <div>
+            <label htmlFor="password" className="text-slate-600 text-sm">
+              Password Nochmal
+            </label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              placeholder="Passwort eingeben"
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+              onChange={handleChangePassAgain}
+            />
+            <div>{errors.passAgain[0]}</div>
           </div>
-          <div className="col-12">
-            <div className="mb-3">
-              <label htmlFor={`email-${uid}`} className="form-label">
-                Email
-              </label>
-              <input
-                id={`email-${uid}`}
-                type="text"
-                name="email"
-                className={`form-control input-email ${
-                  errors?.email ? "is-invalid" : "is-valid"
-                }`}
-                placeholder="Enter your email"
-                onChange={handleChangeEmail}
-                onBlur={handleBlur}
-              />
-              <div className="valid-feedback">Alles ok</div>
-              <div className="invalid-feedback">{errors?.email}</div>
-            </div>
-          </div>
-          <div className="col-12">
-            <div className="mb-3">
-              <label htmlFor={`password-${uid}`} className="form-label">
-                Password
-              </label>
-              <input
-                id={`password-${uid}`}
-                type="password"
-                className="form-control input-password"
-                placeholder="Enter your password"
-                onChange={handleChangePassword}
-              />
-            </div>
-          </div>
-          <div className="col-12">
-            <div className="mb-3">
-              <label htmlFor={`password-confirm-${uid}`} className="form-label">
-                confirm Password
-              </label>
-              <input
-                id={`password-confirm-${uid}`}
-                type="password"
-                className="form-control input-password"
-                placeholder="Enter your password"
-                onChange={handleChangePasswordConfirm}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="row">
-          <button type="submit" className="btn btn-dark button-register">
-            Register
+
+          <button className="mt-3 w-full p-2 bg-indigo-600 hover:bg-indigo-500 transition-all transi rounded-lg hover:rounded-full text-slate-50">
+            Login
           </button>
-          <p>
-            Already registered?{" "}
-            <Link className="link-registered my-3 d-inline-block" to="/login">
-              Login
-            </Link>
-          </p>
+          <div>{errors.form}</div>
+        </form>
+        <div className="flex gap-2">
+          <Link
+            to="/register"
+            className="text-sm text-slate-600 hover:underline hover:text-slate-800 transition"
+          >
+            Registrieren
+          </Link>
+          <Link
+            to="#"
+            className="text-sm text-slate-600 hover:underline hover:text-slate-800 transition"
+          >
+            Passwort vergessen
+          </Link>
         </div>
-      </form>
-
-      {error && (
-        <span style={{ color: "red", marginTop: "10px" }}>
-          Something went wrong
-        </span>
-      )}
-    </div>
+      </div>
+    </>
   );
-};
-
-export default RegisterPage;
+}
